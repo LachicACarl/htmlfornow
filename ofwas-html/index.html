@@ -1,0 +1,536 @@
+﻿
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OFWAS | Faculty Workload Allocation</title>
+<style>
+:root {
+  --navy:#1e293b; --teal:#0d9488; --bg:#f0f4f9;
+  --text:#253449; --muted:#718096; --border:#e2e8f0;
+  --white:#fff; --danger:#dc2626; --green:#16a34a;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+button,input,select{font:inherit}
+button{cursor:pointer;border:0;border-radius:9px;padding:11px 15px;font-weight:600}
+.primary{background:var(--teal);color:white}
+.secondary{background:white;border:1px solid var(--border);color:var(--text)}
+.danger{background:#fee2e2;color:#b91c1c}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:260px;background:var(--navy);color:white;padding:16px 12px;display:flex;flex-direction:column;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:12px;padding:6px 8px 24px;border-bottom:1px solid #38465a;margin-bottom:20px}
+.brand-icon{background:var(--teal);border-radius:12px;padding:12px;font-size:22px}
+.brand small{display:block;color:#aab6c7;margin-top:4px}
+.nav{display:grid;gap:7px}
+.nav button{background:transparent;color:#cbd5e1;text-align:left;padding:14px 13px}
+.nav button:hover,.nav button.active{background:var(--teal);color:white}
+.sidebar-footer{margin-top:auto;padding:16px 8px 0;border-top:1px solid #38465a;color:#aab6c7;font-size:12px;line-height:1.6}
+main{flex:1;min-width:0}
+.topbar{height:62px;background:white;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;gap:12px}
+.topbar strong{font-size:13px;letter-spacing:.3px}
+.topbar span{color:var(--muted);font-size:13px}
+.content{padding:28px;max-width:1800px;margin:auto}
+.page-heading{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;margin-bottom:22px}
+.eyebrow{font-size:12px;letter-spacing:2px;font-weight:bold;color:#64748b}
+.subtitle{color:var(--muted);font-size:14px;margin-top:10px}
+.actions{display:flex;gap:9px;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;margin-bottom:22px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:22px}
+.card{background:white;border:1px solid var(--border);border-radius:17px;padding:22px;box-shadow:0 2px 3px #1720330a;min-width:0}
+.metric{display:flex;align-items:center;gap:15px}
+.metric-icon{background:#e5f5f1;color:var(--teal);border-radius:13px;padding:14px;font-size:22px}
+.metric-label{font-size:13px;color:var(--muted)}
+.metric-value{font-size:27px;font-weight:bold;margin:5px 0}
+.metric-note{font-size:12px;color:var(--muted)}
+.card-title{font-size:12px;letter-spacing:1.5px;font-weight:bold;color:#64748b;margin:0 0 18px}
+.empty{text-align:center;padding:32px;color:var(--muted)}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:20px 0}
+.toolbar input{flex:1;min-width:180px}
+input,select{padding:12px;border:1px solid var(--border);border-radius:9px;background:white;color:var(--text);width:100%;min-width:0}
+label{font-size:13px;font-weight:600;color:#475569;display:grid;gap:7px}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.form-actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;white-space:nowrap;font-size:13px}
+th,td{text-align:left;padding:15px 12px;border-bottom:1px solid var(--border)}
+th{color:#64748b;font-size:11px;letter-spacing:.7px}
+td{color:#475569}
+.pill{display:inline-block;padding:5px 9px;border-radius:20px;font-size:11px;font-weight:bold;background:#e2e8f0;color:#475569}
+.pill.approved{background:#dcfce7;color:#166534}
+.pill.pending{background:#fef3c7;color:#92400e}
+.pill.flagged,.pill.conflict{background:#fee2e2;color:#b91c1c}
+.notice{padding:16px;border:1px solid #f5df8b;background:#fffbeb;color:#854d0e;border-radius:12px;margin-bottom:20px;line-height:1.6}
+.progress{height:8px;background:#e2e8f0;border-radius:10px;overflow:hidden;min-width:90px}
+.progress div{height:100%;background:var(--teal)}
+.section{margin-bottom:22px}
+.small{font-size:12px;color:var(--muted)}
+button:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:1050px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.two-col{grid-template-columns:1fr}}
+@media(max-width:700px){
+ .layout{display:block}.sidebar{width:100%;padding:10px}
+ .brand{padding-bottom:12px;margin-bottom:10px}
+ .nav{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .nav button{padding:10px;font-size:12px}
+ .sidebar-footer{display:none}.topbar{padding:0 14px}
+ .topbar strong{font-size:11px}.content{padding:16px}
+ .grid{grid-template-columns:1fr 1fr;gap:9px}
+ .card{padding:15px}.metric{gap:9px}.metric-icon{padding:9px}
+ .metric-value{font-size:22px}.form-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-icon"></div>
+    <div><strong>OFWAS</strong><small>Workload Allocation</small></div>
+  </div>
+  <nav class="nav" id="nav">
+    <button data-page="dashboard" class="active"> &nbsp; Dashboard</button>
+    <button data-page="faculty"> &nbsp; Faculty</button>
+    <button data-page="scenario"> &nbsp; Scenario Builder</button>
+    <button data-page="review"> &nbsp; Allocation Review</button>
+    <button data-page="analytics"> &nbsp; Analytics</button>
+    <button data-page="reports"> &nbsp; Reports</button>
+    <button data-page="curriculum"> &nbsp; Curriculum</button>
+  </nav>
+</aside>
+<main>
+  <header class="topbar">
+    <strong> &nbsp; OPTIMIZATION-BASED FACULTY WORKLOAD ALLOCATION SYSTEM</strong>
+    <span>PLM Graduate School</span>
+  </header>
+  <div class="content" id="app"></div>
+</main>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = v => String(v ?? "").replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+}[c]));
+
+const defaults = {faculty:[],subjects:[],sections:[],allocations:[]};
+let db;
+try {
+  db = JSON.parse(localStorage.getItem("ofwas-data")) || structuredClone(defaults);
+} catch { db = structuredClone(defaults); }
+
+function save(){
+  localStorage.setItem("ofwas-data",JSON.stringify(db));
+}
+let page="dashboard", search="", filter="All";
+
+function heading(title,sub,buttons=""){
+  return `<div class="page-heading"><div><div class="eyebrow">${title.toUpperCase()}</div>
+  <div class="subtitle">${sub}</div></div><div class="actions">${buttons}</div></div>`;
+}
+function card(title,body){
+  return `<section class="card"><h3 class="card-title">${title}</h3>${body}</section>`;
+}
+function metric(title,value,note,icon){
+  return `<div class="card metric"><div class="metric-icon">${icon}</div><div>
+  <div class="metric-label">${title}</div><div class="metric-value">${value}</div>
+  <div class="metric-note">${note}</div></div></div>`;
+}
+function empty(text){return `<div class="empty">${text}</div>`}
+function btn(text,action,cls="secondary"){
+  return `<button class="${cls}" data-action="${action}">${text}</button>`;
+}
+function table(headers,rows){
+  if(!rows.length)return empty("No records available yet.");
+  return `<div class="table-wrap"><table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div>`;
+}
+function badge(s){
+  const cls=String(s).toLowerCase().replace(/\s+/g,"-");
+  return `<span class="pill ${esc(cls)}">${esc(s)}</span>`;
+}
+function facultyUnits(id, excludeAllocationId=null){
+  return db.allocations
+    .filter(a=>a.facultyId===id && a.status!=="Flagged" && a.id!==excludeAllocationId)
+    .reduce((sum,a)=>sum+(Number(db.sections.find(s=>s.id===a.sectionId)?.units)||0),0);
+}
+function conflict(a,b){
+  if(!a||!b)return false;
+  if(a.semester && b.semester && a.semester!==b.semester)return false;
+  if(a.day!==b.day)return false;
+  if(!a.start||!a.end||!b.start||!b.end)return false;
+  return a.start < b.end && b.start < a.end;
+}
+function sectionConflict(facultyId,sectionId){
+  const target=db.sections.find(s=>s.id===sectionId);
+  if(!target)return false;
+  return db.allocations.some(a=>{
+    if(a.facultyId!==facultyId||a.sectionId===sectionId||a.status==="Flagged")return false;
+    const other=db.sections.find(s=>s.id===a.sectionId);
+    return other && conflict(target,other);
+  });
+}
+function render(){
+  $("#nav").querySelectorAll("button").forEach(b=>b.classList.toggle("active",b.dataset.page===page));
+  const f=db.faculty, s=db.sections, a=db.allocations;
+  const conflicts=a.filter(x=>x.status!=="Flagged"&&sectionConflict(x.facultyId,x.sectionId)).length;
+  const assigned=new Set(a.filter(x=>x.status!=="Flagged").map(x=>x.sectionId));
+  let html="";
+  if(page==="dashboard"){
+    html=heading("Workload Dashboard","Live counts from your local OFWAS records.",btn("  Refresh","refresh"));
+    html+=`<div class="grid">${metric("Faculty",f.length,"Faculty records","")}
+      ${metric("Sections",s.length,`${s.length-assigned.size} unassigned`,"")}
+      ${metric("Allocations",a.length,"Current assignments","")}
+      ${metric("Conflicting allocations",conflicts,"Schedule conflicts"," ")}</div>`;
+    html+=`<div class="two-col">${card("CURRENT WORKLOAD SUMMARY",f.length?
+      table(["FACULTY","EMPLOYMENT","UNITS","UTILIZATION"],f.map(x=>{
+        const used=facultyUnits(x.id),pct=x.maxUnits?Math.round(used/x.maxUnits*100):0;
+        return `<tr><td>${esc(x.name)}</td><td>${esc(x.type)}</td><td>${used}/${x.maxUnits}</td><td><div class="progress"><div style="width:${Math.min(100,pct)}%"></div></div>${pct}%</td></tr>`;
+      })):empty("No faculty records yet. Add faculty to begin tracking workload."))}
+      ${card("OPTIMIZATION",`<p>Build a draft allocation using faculty availability, subject specialization and schedules.</p>
+      <p class="small">Assignments are generated locally and require review before approval.</p>${btn("Open Scenario Builder  ","scenario","primary")}`)}</div>`;
+    html+=card("CURRENT ALLOCATIONS",a.length?
+      table(["FACULTY","SECTION","SUBJECT","UNITS","STATUS"],a.map(x=>{
+        const fac=f.find(y=>y.id===x.facultyId), sec=s.find(y=>y.id===x.sectionId);
+        const sub=db.subjects.find(y=>y.id===sec?.subjectId);
+        return `<tr><td>${esc(fac?.name||"Deleted faculty")}</td><td>${esc(sec?.code||"Deleted section")}</td><td>${esc(sub?.name||"")}</td><td>${sec?.units||0}</td><td>${badge(x.status)}</td></tr>`;
+      })):empty("No allocations available."));
+  }
+  if(page==="faculty"){
+    html=heading("Faculty Directory","Manage faculty members and teaching capacity.",btn("+ Add Faculty","add-faculty","primary"));
+    html+=`<div class="toolbar"><input id="search" placeholder="Search name or employee ID..." value="${esc(search)}">
+    <select id="filter"><option>All</option><option>Full-Time</option><option>Part-Time</option></select></div>`;
+    let list=f.filter(x=>(x.name+" "+x.employeeId).toLowerCase().includes(search.toLowerCase())&&(filter==="All"||x.type===filter));
+    html+=card("FACULTY RECORDS",table(["ID","EMPLOYEE ID","NAME","EMPLOYMENT","MAX UNITS","ASSIGNED","ACTIONS"],list.map(x=>
+      `<tr><td>${esc(x.id)}</td><td>${esc(x.employeeId)}</td><td>${esc(x.name)}</td><td>${esc(x.type)}</td><td>${x.maxUnits}</td><td>${facultyUnits(x.id)}</td><td>${btn("Edit","edit-faculty:"+x.id)} ${btn("Delete","delete-faculty:"+x.id,"danger")}</td></tr>`)));
+  }
+  if(page==="curriculum"){
+    html=heading("Subjects and Sections","Create subjects and schedule class sections.");
+    html+=`<div class="two-col"><section class="card"><h3 class="card-title">SUBJECTS (${db.subjects.length})</h3>
+    ${emptyIf(db.subjects.length,"No subjects yet. Add your first subject.")}
+    ${db.subjects.map(x=>`<p>${esc(x.code)}  ${esc(x.name)} (${x.units} units) ${btn("Edit","edit-subject:"+x.id)} ${btn("Delete","delete-subject:"+x.id,"danger")}</p>`).join("")}
+    <hr><h3>Add Subject</h3><form id="subject-form" class="form-grid">
+    <label>Subject code<input name="code" required></label><label>Subject name<input name="name" required></label>
+    <label>Units<input name="units" type="number" min="1" max="12" value="3" required></label>
+    <label>Required specialization (optional)<input name="specialization"></label>
+    <label>Minimum class size<input name="min" type="number" min="1" value="1" required></label>
+    <label>Maximum class size<input name="max" type="number" min="1" value="50" required></label>
+    <div class="form-actions"><button class="primary">+ Add Subject</button></div></form></section>
+    <section class="card"><h3 class="card-title">SECTIONS (${s.length})</h3>
+    ${emptyIf(s.length,"No sections yet. Create a subject first.")}
+    ${s.map(x=>`<p><strong>${esc(x.code)}</strong>  ${esc(db.subjects.find(y=>y.id===x.subjectId)?.name||"Unknown subject")}  ${esc(x.day)} ${esc(x.start)}
+    ${btn("Edit","edit-section:"+x.id)} ${btn("Delete","delete-section:"+x.id,"danger")}</p>`).join("")}
+    <hr><h3>Add Section</h3><form id="section-form" class="form-grid">
+    <label>Subject<select name="subjectId" required>${db.subjects.map(x=>`<option value="${x.id}">${esc(x.code)}  ${esc(x.name)}</option>`).join("")}</select></label>
+    <label>Section code<input name="code" required></label>
+    <label>Semester<input name="semester" placeholder="1st Semester, AY 2026-2027" required></label>
+    <label>Schedule day<select name="day">${["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].map(x=>`<option>${x}</option>`).join("")}</select></label>
+    <label>Start time<input name="start" type="time" value="08:00" required></label>
+    <label>End time<input name="end" type="time" value="10:00" required></label>
+    <label>Room<input name="room"></label><label>Enrollment<input name="enrollment" type="number" min="0" value="0"></label>
+    <label>Planning section<select name="planning"><option value="false" selected>No</option><option value="true">Yes</option></select></label>
+    <div class="form-actions"><button class="primary" ${db.subjects.length?"":"disabled"}>+ Add Section</button></div></form></section></div>`;
+  }
+  if(page==="scenario"){
+    html=heading("Scenario Builder","Generate draft assignments and inspect policy constraints.");
+    html+=`<div class="grid">${metric("Faculty records",f.length,"Available faculty","")}${metric("Section records",s.length,"Teaching sections","")}${metric("Unassigned",s.filter(x=>!assigned.has(x.id)).length,"Sections to allocate","")}${metric("Draft allocations",a.filter(x=>x.status==="Pending").length,"Awaiting review","")}</div>`;
+    html+=`<div class="notice">This prototype uses a transparent greedy allocation heuristic, not a production-grade genetic algorithm. Review every proposed assignment before approval.</div>`;
+    html+=card("OPTIMIZATION CONTROLS",`<p>Each section is matched to an eligible faculty member based on specialization, capacity and schedule availability.</p>
+    <p class="small">Existing approved and pending assignments count toward capacity. Conflicting assignments are not created.</p>
+    ${btn("Generate Draft Allocations","optimize","primary")} ${btn("Review Allocations","review")}`);
+  }
+  if(page==="review"){
+    html=heading("Allocation Review","Inspect, approve or flag proposed faculty assignments.",btn("Export CSV","export","secondary"));
+    html+=`<div class="grid">${metric("Pending review",a.filter(x=>x.status==="Pending").length,"Awaiting decision","")}${metric("Approved",a.filter(x=>x.status==="Approved").length,"Approved assignments","")}${metric("Flagged",a.filter(x=>x.status==="Flagged").length,"Needs attention","")}${metric("Sections",s.length,"All sections","")}</div>`;
+    html+=`<div class="toolbar"><input id="search" placeholder="Search faculty, subject or section..." value="${esc(search)}"><select id="filter"><option>All</option><option>Pending</option><option>Approved</option><option>Flagged</option></select></div>`;
+    let list=a.filter(x=>{
+      const fac=f.find(y=>y.id===x.facultyId),sec=s.find(y=>y.id===x.sectionId),sub=db.subjects.find(y=>y.id===sec?.subjectId);
+      return (fac?.name+" "+sec?.code+" "+sub?.name).toLowerCase().includes(search.toLowerCase())&&(filter==="All"||x.status===filter);
+    });
+    html+=card("ASSIGNMENTS",table(["FACULTY","SECTION","SUBJECT","SCHEDULE","UNITS","STATUS","ACTIONS"],list.map(x=>{
+      const fac=f.find(y=>y.id===x.facultyId),sec=s.find(y=>y.id===x.sectionId),sub=db.subjects.find(y=>y.id===sec?.subjectId);
+      const hasConflict=sectionConflict(x.facultyId,x.sectionId);
+      return `<tr><td>${esc(fac?.name||"Deleted faculty")}</td><td>${esc(sec?.code||"Deleted section")}</td><td>${esc(sub?.name||"")}</td>
+      <td>${esc(sec?.day||"")} ${esc(sec?.start||"")}"")}</td><td>${sec?.units||0}</td>
+      <td>${badge(hasConflict?"Conflict":x.status)}</td><td>${x.status!=="Approved"?btn("Approve","approve:"+x.id,"primary"):""}
+      ${x.status!=="Flagged"?btn("Flag","flag:"+x.id,"danger"):""} ${btn("Delete","delete-allocation:"+x.id,"secondary")}</td></tr>`;
+    })));
+  }
+  if(page==="analytics"){
+    const totalMax=f.reduce((n,x)=>n+Number(x.maxUnits),0),totalUsed=f.reduce((n,x)=>n+facultyUnits(x.id),0);
+    html=heading("Workload Analytics","Current records only; historical trends are not yet available.",btn("  Refresh","refresh"));
+    html+=`<div class="grid">${metric("Faculty records",f.length,"Current faculty","")}${metric("Current allocations",a.length,"Assignments","")}${metric("Mean utilization",totalMax?Math.round(totalUsed/totalMax*100)+"%":"","Assigned / maximum units","")}${metric("Current conflicts",conflicts,"Schedule overlaps"," ")}</div>`;
+    html+=card("FACULTY UTILIZATION",f.length?f.map(x=>{
+      const used=facultyUnits(x.id),pct=x.maxUnits?Math.round(used/x.maxUnits*100):0;
+      return `<p><strong>${esc(x.name)}</strong><span style="float:right">${used}/${x.maxUnits} units (${pct}%)</span></p><div class="progress"><div style="width:${Math.min(100,pct)}%"></div></div><br>`;
+    }).join(""):empty("No workload observations yet."));
+  }
+  if(page==="reports"){
+    html=heading("Workload Reports","Faculty workload totals and allocation metrics.",btn("Export CSV","export","primary"));
+    html+=card("WORKLOAD SUMMARY",f.length?table(["EMPLOYEE ID","FACULTY","EMPLOYMENT","MAX UNITS","ASSIGNED UNITS","UTILIZATION"],f.map(x=>{
+      const used=facultyUnits(x.id);
+      return `<tr><td>${esc(x.employeeId)}</td><td>${esc(x.name)}</td><td>${esc(x.type)}</td><td>${x.maxUnits}</td><td>${used}</td><td>${x.maxUnits?Math.round(used/x.maxUnits*100):0}%</td></tr>`;
+    })):empty("No report data is available because there are no faculty records."));
+    html+=`<p class="small">CSV export includes current records. Historical reporting and PDF export are not implemented in this prototype.</p>`;
+  }
+  $("#app").innerHTML=html;
+  const filt=$("#filter");if(filt)filt.value=filter;
+}
+function emptyIf(has,text){return has?"":empty(text)}
+function uid(){return crypto.randomUUID()}
+function formValues(form){return Object.fromEntries(new FormData(form).entries())}
+
+function addFaculty(existing){
+  const old=existing?db.faculty.find(x=>x.id===existing):null;
+  const name=prompt("Faculty full name:",old?.name||"");if(name===null)return;
+  if(!name.trim())return alert("Name is required.");
+  const employeeId=prompt("Employee ID:",old?.employeeId||"");if(employeeId===null)return;
+  if(!employeeId.trim())return alert("Employee ID is required.");
+  if(db.faculty.some(x=>x.employeeId.toLowerCase()===employeeId.trim().toLowerCase()&&x.id!==existing))
+    return alert("Employee ID already exists.");
+  const type=prompt("Employment type: Full-Time or Part-Time",old?.type||"Full-Time");if(type===null)return;
+  if(!["Full-Time","Part-Time"].includes(type))return alert("Choose Full-Time or Part-Time.");
+  const maxUnits=Number(prompt("Maximum teaching units:",old?.maxUnits|| (type==="Full-Time"?24:12)));
+  if(!Number.isFinite(maxUnits)||maxUnits<=0)return alert("Maximum units must be greater than zero.");
+  const specializations=prompt("Specializations, separated by commas:",old?.specializations||"")||"";
+  const data={id:existing||uid(),name:name.trim(),employeeId:employeeId.trim(),type,maxUnits,specializations};
+  if(old)Object.assign(old,data);else db.faculty.push(data);
+  save();render();
+}
+function optimize(){
+  if(!db.faculty.length||!db.sections.length)return alert("Add faculty and class sections first.");
+  const assigned=new Set(db.allocations.filter(a=>a.status!=="Flagged").map(a=>a.sectionId));
+  let created=0, skipped=[];
+  // Longest/most constrained sections first.
+  const sections=[...db.sections].filter(s=>!assigned.has(s.id)).sort((a,b)=>{
+    const sa=db.subjects.find(x=>x.id===a.subjectId),sb=db.subjects.find(x=>x.id===b.subjectId);
+    return Number(b.enrollment)-Number(a.enrollment)||(sb?.units||0)-(sa?.units||0);
+  });
+  for(const sec of sections){
+    const sub=db.subjects.find(x=>x.id===sec.subjectId);
+    if(!sub){skipped.push(sec.code+" (missing subject record)");continue;}
+    if(sec.planning==="true"){skipped.push(sec.code+" (planning section)");continue;}
+    const eligible=db.faculty.filter(f=>{
+      if(f.maxUnits-facultyUnits(f.id)<sub.units)return false;
+      if(sub.specialization&&!String(f.specializations||"").toLowerCase().split(",").map(x=>x.trim()).includes(String(sub.specialization).toLowerCase().trim()))return false;
+      if(sectionConflict(f.id,sec.id))return false;
+      return true;
+    }).sort((a,b)=>{
+      const ua=facultyUnits(a.id)/a.maxUnits,ub=facultyUnits(b.id)/b.maxUnits;
+      return ua-ub;
+    });
+    if(!eligible.length){skipped.push(sec.code);continue;}
+    db.allocations.push({id:uid(),facultyId:eligible[0].id,sectionId:sec.id,status:"Pending"});
+    created++;
+  }
+  save();render();
+  alert(`Draft generation finished.\nCreated: ${created}\nUnassigned or skipped: ${skipped.length}${skipped.length?"\n"+skipped.join(", "):""}\n\nReview the proposed assignments before approval.`);
+}
+function exportCSV(){
+  const rows=[["Employee ID","Faculty","Employment","Section","Subject","Day","Start","End","Units","Status"]];
+  db.allocations.forEach(a=>{
+    const f=db.faculty.find(x=>x.id===a.facultyId),s=db.sections.find(x=>x.id===a.sectionId),sub=db.subjects.find(x=>x.id===s?.subjectId);
+    rows.push([f?.employeeId,f?.name,f?.type,s?.code,sub?.name,s?.day,s?.start,s?.end,sub?.units,a.status]);
+  });
+  if(!db.allocations.length)db.faculty.forEach(f=>rows.push([f.employeeId,f.name,f.type,"","","","","",0,"Unassigned"]));
+  const csv=rows.map(row=>row.map(v=>`"${String(v??"").replace(/"/g,'""')}"`).join(",")).join("\r\n");
+  const url=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"}));
+  const link=document.createElement("a");link.href=url;link.download="ofwas-report.csv";link.click();URL.revokeObjectURL(url);
+}
+$("#nav").addEventListener("click",e=>{
+  const b=e.target.closest("[data-page]");if(!b)return;
+  page=b.dataset.page;search="";filter="All";render();
+});
+$("#app").addEventListener("input",e=>{
+  if(e.target.id==="search"){search=e.target.value;const p=e.target.selectionStart;render();const i=$("#search");i?.focus();i?.setSelectionRange(p,p);}
+});
+$("#app").addEventListener("change",e=>{
+  if(e.target.id==="filter"){filter=e.target.value;render();}
+});
+$("#app").addEventListener("submit",e=>{
+  e.preventDefault();const form=e.target,v=formValues(form);
+  if(form.id==="subject-form"){
+    if(db.subjects.some(x=>x.code.toLowerCase()===v.code.trim().toLowerCase()))return alert("Subject code already exists.");
+    if(Number(v.min)>Number(v.max))return alert("Minimum class size cannot exceed maximum.");
+    db.subjects.push({id:uid(),code:v.code.trim(),name:v.name.trim(),units:Number(v.units),specialization:v.specialization.trim(),min:Number(v.min),max:Number(v.max)});
+  }
+  if(form.id==="section-form"){
+    if(v.start>=v.end)return alert("End time must be after start time.");
+    if(db.sections.some(x=>x.code.toLowerCase()===v.code.trim().toLowerCase()))return alert("Section code already exists.");
+    const sub=db.subjects.find(x=>x.id===v.subjectId);
+    db.sections.push({id:uid(),subjectId:v.subjectId,code:v.code.trim(),semester:v.semester,day:v.day,start:v.start,end:v.end,room:v.room,enrollment:Number(v.enrollment),planning:v.planning,units:sub?.units||0});
+  }
+  save();render();alert("Record saved successfully.");
+});
+$("#app").addEventListener("click",e=>{
+  const b=e.target.closest("[data-action]");if(!b)return;
+  const [action,id]=b.dataset.action.split(":");
+  if(action==="refresh"){render();return}
+  if(action==="add-faculty"){addFaculty();return}
+  if(action==="edit-faculty"){addFaculty(id);return}
+  if(action==="edit-subject"){
+    const item=db.subjects.find(x=>x.id===id);
+    if(!item)return alert("Subject not found.");
+
+    const code=prompt("Subject code:",item.code);
+    if(code===null)return;
+    const name=prompt("Subject name:",item.name);
+    if(name===null)return;
+    const unitsText=prompt("Units (1-12):",String(item.units));
+    if(unitsText===null)return;
+    const specialization=prompt("Required specialization:",item.specialization||"");
+    if(specialization===null)return;
+    const minText=prompt("Minimum class size:",String(item.min??1));
+    if(minText===null)return;
+    const maxText=prompt("Maximum class size:",String(item.max??50));
+    if(maxText===null)return;
+
+    const cleanCode=code.trim(), cleanName=name.trim();
+    const units=Number(unitsText), min=Number(minText), max=Number(maxText);
+
+    if(!cleanCode||!cleanName)return alert("Subject code and name are required.");
+    if(db.subjects.some(x=>x.id!==id&&x.code.toLowerCase()===cleanCode.toLowerCase()))
+      return alert("That subject code already exists.");
+    if(!Number.isInteger(units)||units<1||units>12)
+      return alert("Units must be a whole number from 1 to 12.");
+    if(!Number.isInteger(min)||!Number.isInteger(max)||min<1||max<min)
+      return alert("Check the minimum and maximum class sizes.");
+
+    item.code=cleanCode;
+    item.name=cleanName;
+    item.units=units;
+    item.specialization=specialization.trim();
+    item.min=min;
+    item.max=max;
+
+    db.sections.filter(x=>x.subjectId===id).forEach(x=>x.units=units);
+    save();render();
+    alert("Subject updated successfully.");
+    return;
+  }
+  if(action==="edit-section"){
+    const item=db.sections.find(x=>x.id===id);
+    if(!item)return alert("Section not found.");
+
+    const code=prompt("Section code:",item.code);
+    if(code===null)return;
+    const semester=prompt("Semester:",item.semester||"");
+    if(semester===null)return;
+    const days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+    const day=prompt("Schedule day (Monday-Sunday):",item.day);
+    if(day===null)return;
+    const start=prompt("Start time (HH:MM):",item.start);
+    if(start===null)return;
+    const end=prompt("End time (HH:MM):",item.end);
+    if(end===null)return;
+    const room=prompt("Room:",item.room||"");
+    if(room===null)return;
+    const enrollmentText=prompt("Enrollment:",String(item.enrollment??0));
+    if(enrollmentText===null)return;
+    const planning=prompt("Planning section? Enter yes or no:",item.planning==="true"?"yes":"no");
+    if(planning===null)return;
+
+    const cleanCode=code.trim();
+    const enrollment=Number(enrollmentText);
+    const plan=planning.trim().toLowerCase();
+
+    if(!cleanCode||!semester.trim())return alert("Section code and semester are required.");
+    if(db.sections.some(x=>x.id!==id&&x.code.toLowerCase()===cleanCode.toLowerCase()))
+      return alert("That section code already exists.");
+    if(!days.includes(day))return alert("Enter a valid day, such as Monday.");
+    if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(start)||
+       !/^([01]\d|2[0-3]):[0-5]\d$/.test(end)||start>=end)
+      return alert("Enter valid 24-hour times. End time must be after start time.");
+    if(!Number.isInteger(enrollment)||enrollment<0)
+      return alert("Enrollment must be a non-negative whole number.");
+    if(!["yes","no","true","false"].includes(plan))
+      return alert("Planning section must be yes or no.");
+
+    item.code=cleanCode;
+    item.semester=semester.trim();
+    item.day=day;
+    item.start=start;
+    item.end=end;
+    item.room=room.trim();
+    item.enrollment=enrollment;
+    item.planning=["yes","true"].includes(plan)?"true":"false";
+
+    save();render();
+    alert("Section updated successfully.");
+    return;
+  }
+  if(action==="optimize"){optimize();return}
+  if(action==="review"){page="review";render();return}
+  if(action==="export"){exportCSV();return}
+  if(action==="approve"){
+    const a=db.allocations.find(x=>x.id===id);
+    if(!a)return alert("Allocation not found.");
+    if(a.status==="Approved")return alert("This allocation is already approved.");
+    if(a.status==="Flagged")return alert("Unflag this allocation before approving it.");
+
+    const faculty=db.faculty.find(f=>f.id===a.facultyId);
+    if(!faculty)return alert("Cannot approve: faculty record is missing.");
+
+    const section=db.sections.find(s=>s.id===a.sectionId);
+    if(!section)return alert("Cannot approve: section record is missing.");
+
+    const subject=db.subjects.find(s=>s.id===section.subjectId);
+    if(!subject)return alert("Cannot approve: subject record is missing.");
+
+    if(section.planning==="true")return alert("Cannot approve a planning section.");
+
+    const duplicate=db.allocations.some(x=>
+      x.id!==a.id && x.sectionId===a.sectionId && x.status!=="Flagged"
+    );
+    if(duplicate)return alert("Cannot approve: this section already has another active allocation.");
+
+    if(sectionConflict(a.facultyId,a.sectionId))
+      return alert("Cannot approve: this faculty member has an overlapping class in the same semester.");
+
+    const currentUnits=facultyUnits(a.facultyId,a.id);
+    const sectionUnits=Number(section.units ?? subject.units) || 0;
+    if(currentUnits+sectionUnits>Number(faculty.maxUnits))
+      return alert("Cannot approve: maximum teaching units would be exceeded.");
+
+    a.status="Approved";
+    save();
+    render();
+    alert("Allocation approved successfully.");
+    return;
+  }
+  if(action==="flag"){
+    const a=db.allocations.find(x=>x.id===id);if(a){a.status="Flagged";save();render()}return;
+  }
+  if(action==="delete-faculty"){
+    if(!confirm("Delete this faculty member and their allocations?"))return;
+    db.faculty=db.faculty.filter(x=>x.id!==id);db.allocations=db.allocations.filter(x=>x.facultyId!==id);
+  }
+  if(action==="delete-subject"){
+    if(db.sections.some(x=>x.subjectId===id)&&!confirm("This subject has sections. Delete it and related sections and allocations?"))return;
+    const sectionIds=db.sections.filter(x=>x.subjectId===id).map(x=>x.id);
+    db.sections=db.sections.filter(x=>x.subjectId!==id);
+    db.allocations=db.allocations.filter(x=>!sectionIds.includes(x.sectionId));
+    db.subjects=db.subjects.filter(x=>x.id!==id);
+  }
+  if(action==="delete-section"){
+    if(!confirm("Delete this section and its allocations?"))return;
+    db.sections=db.sections.filter(x=>x.id!==id);db.allocations=db.allocations.filter(x=>x.sectionId!==id);
+  }
+  if(action==="delete-allocation"){
+    if(!confirm("Delete this allocation?"))return;
+    db.allocations=db.allocations.filter(x=>x.id!==id);
+  }
+  save();render();
+});
+render();
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
